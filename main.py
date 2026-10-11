@@ -1,12 +1,15 @@
 import cv2
 import mediapipe as mp
+import pyautogui
 import util
 mpHands=mp.solutions.hands
+screen_width, screen_height = pyautogui.size()
+
 hands =mpHands.Hands(
     static_image_mode=False,
     model_complexity=1,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5,
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.7,
     max_num_hands=1 
 ) 
 def find_finger_tip(processed):
@@ -15,11 +18,19 @@ def find_finger_tip(processed):
         return hand_landmarks.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP]
     return None
 
+def move_mouse(index_finger_tip):
+    if index_finger_tip is not None:
+        x=int(index_finger_tip.x*screen_width)
+        y=int(index_finger_tip.y*screen_height)
+        pyautogui.moveTo(x,y)
+
 def detcted_gestures(frame,landmarks_list,processed):
     if len(landmarks_list)>=21:
 
         index_finger_tip=find_finger_tip(processed)
-        print(index_finger_tip)
+        thumb_index_dist=util.get_diastance([landmarks_list[4],landmarks_list[5]])
+        if thumb_index_dist<50 and util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])>90:
+            move_mouse(index_finger_tip)
 
 def main():
     cap=cv2.VideoCapture(0)
