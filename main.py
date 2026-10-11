@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import util
 mpHands=mp.solutions.hands
 hands =mpHands.Hands(
     static_image_mode=False,
@@ -8,6 +9,18 @@ hands =mpHands.Hands(
     min_tracking_confidence=0.5,
     max_num_hands=1 
 ) 
+def find_finger_tip(processed):
+    if processed.multi_hand_landmarks:
+        hand_landmarks=processed.multi_hand_landmarks[0]
+        return hand_landmarks.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP]
+    return None
+
+def detcted_gestures(frame,landmarks_list,processed):
+    if len(landmarks_list)>=21:
+
+        index_finger_tip=find_finger_tip(processed)
+        print(index_finger_tip)
+
 def main():
     cap=cv2.VideoCapture(0)
     draw=mp.solutions.drawing_utils
@@ -28,7 +41,7 @@ def main():
                 for lm in hand_landmarks.landmark:
                     landmarks_list.append((lm.x,lm.y))
 
-                print(landmarks_list)
+            detcted_gestures(frame,landmarks_list,processed)
 
             cv2.imshow('Frame',frame)
             if cv2.waitKey(1)& 0xFF ==ord('q'):
