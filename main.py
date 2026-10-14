@@ -4,6 +4,7 @@ import pyautogui
 import util
 import random
 import time
+import numpy as np 
 from pynput.mouse import Button,Controller
 from pathlib import Path
 
@@ -12,6 +13,12 @@ screen_width, screen_height = pyautogui.size()
 mouse=Controller()
 last_action_time=0
 CLICK_DELAY=0.5
+SMOOTHING =5
+MOVE_THUMB_DIST = 70
+MARGIN_X = 0.2
+MARGIN_TOP = 0.2
+MARGIN_BOTTOM = 0.35
+prev_x, prev_y=None, None 
 save_dir = Path.home() / "Pictures" / "hand-mouse-screenshots"
 save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -59,17 +66,25 @@ def screenshot(landmarks_list, thumb_index_dist):
             )
 
 def move_mouse(index_finger_tip):
+    global prev_x, prev_y
     if index_finger_tip is not None:
-        x=int(index_finger_tip.x*screen_width)
-        y=int(index_finger_tip.y*screen_height)
-        pyautogui.moveTo(x,y)
+        x = int(np.interp(index_finger_tip.x, [MARGIN_X, 1 - MARGIN_X], [0, screen_width]))
+        y = int(np.interp(index_finger_tip.y, [MARGIN_TOP, 1 - MARGIN_BOTTOM], [0, screen_height]))
+        if prev_x is None :
+            prev_x, prev_y=x, y
+        smooth_x=prev_x+(x-prev_x)/SMOOTHING
+        smooth_y=prev_y+(y-prev_y)/SMOOTHING
+        pyautogui.moveTo(int(smooth_x),int(smooth_y))
+        prev_x,prev_y=smooth_x,smooth_y
 
 def detected_gestures(frame,landmarks_list,processed):
     if len(landmarks_list)>=21:
 
         index_finger_tip=find_finger_tip(processed)
         thumb_index_dist=util.get_distance([landmarks_list[4],landmarks_list[5]])
-        if thumb_index_dist<50 and util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])>90:
+        index_angle = util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])
+        cv2.putText(frame, f"dist={int(thumb_index_dist)} angle={int(index_angle)}", (50,100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+        if thumb_index_dist < MOVE_THUMB_DIST and util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8]) > 90 and util.get_angle(landmarks_list[9], landmarks_list[10], landmarks_list[12]) > 90:
             move_mouse(index_finger_tip)
             cv2.putText(frame,"mouse is moving",(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
         #RICHT CLICK
@@ -127,4 +142,4 @@ def main():
         cv2.destroyAllWindows()
 if __name__=='__main__':
     main()
-
+    
