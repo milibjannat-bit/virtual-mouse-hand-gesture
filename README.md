@@ -1,5 +1,4 @@
 # virtual-mouse-hand-gesture
-Control the mouse with hand gestures using OpenCV and MediaPipe# Virtual Mouse with Hand Gestures
 
 Control your computer's mouse with your hand, using only a webcam. Built with Python, OpenCV and MediaPipe.
 
@@ -10,6 +9,7 @@ Control your computer's mouse with your hand, using only a webcam. Built with Py
 - Take a screenshot with a gesture
 - Smooth cursor movement (reduces hand-tracking jitter)
 - Active zone: you can reach every edge of the screen without your hand leaving the camera image
+- Toggle the control on and off with a pinch gesture (sleep mode, to avoid accidental actions)
 
 ## Gestures
 
@@ -20,7 +20,9 @@ Control your computer's mouse with your hand, using only a webcam. Built with Py
 | Right click | Middle finger bent, index finger extended, thumb away |
 | Double click | Index and middle fingers both bent, thumb away |
 | Screenshot | Index and middle fingers both bent, thumb close |
+| Toggle control ON/OFF | Thumb and index fingertips pinched together, middle finger extended |
 
+The program **starts in sleep mode** ("Control OFF"): the camera and hand detection run, but no cursor movement or click is sent. Pinch to switch to "Control ON". Pinch again to go back to sleep. The current state is always shown on screen.
 Press `q` in the camera window to quit.
 
 ## How it works
@@ -61,6 +63,8 @@ You can tune the behavior with the constants at the top of `main.py`:
 | `MOVE_THUMB_DIST` | How close the thumb must be to trigger cursor movement |
 | `MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM` | Part of the camera image ignored on each side (the active zone) |
 | `CLICK_DELAY` | Minimum delay between two clicks, in seconds |
+| `toggle_threshold` | How close the thumb and index fingertips must be to count as a pinch (lower = tighter pinch needed) |
+| `TOGGLE_DELAY` | Minimum delay between two toggles, in seconds (prevents flickering while the pinch is held) |
 
 ## Project structure
 
@@ -82,6 +86,7 @@ Improvements added on top of the tutorial:
 - Cursor smoothing
 - Active zone with separate top/bottom margins
 - More tolerant cursor-movement detection
+- ON/OFF toggle gesture (sleep mode)
 
 ## License
 
