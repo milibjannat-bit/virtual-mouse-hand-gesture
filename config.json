@@ -1,0 +1,7 @@
+{
+    "smoothing":5,
+    "move_thumb_dist":70,
+    "toggle_threshold":70,
+    "toggle_delay":1.5,
+    "click_delay":0.5
+}

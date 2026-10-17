@@ -1,7 +1,8 @@
+import util
+import json
 import cv2
 import mediapipe as mp
 import pyautogui
-import util
 import random
 import time
 import numpy as np 
@@ -12,19 +13,38 @@ mpHands=mp.solutions.hands
 screen_width, screen_height = pyautogui.size()
 mouse=Controller()
 last_action_time=0
-CLICK_DELAY=0.5
-SMOOTHING =5
-MOVE_THUMB_DIST = 70
-MARGIN_X = 0.2
-MARGIN_TOP = 0.2
-MARGIN_BOTTOM = 0.35
-TOGGLE_DELAY=1.5
-
 control_enabled=False #Etat du contrôle :actif ou en veille
-toggle_threshold=70
 prev_x, prev_y=None, None 
 save_dir = Path.home() / "Pictures" / "hand-mouse-screenshots"
 save_dir.mkdir(parents=True, exist_ok=True)
+MARGIN_X = 0.2
+MARGIN_TOP = 0.2
+MARGIN_BOTTOM = 0.35
+DEFAULT_CONFIG={
+    "smoothing":5,
+    "move_thumb_dist":70,
+    "toggle_threshold":70,
+    "toggle_delay":1.5,
+    "click_delay":0.5
+}
+CONFIG_PATH=Path(__file__).parent/"config.json"
+def load_config():
+    config = DEFAULT_CONFIG.copy()
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            config.update(json.load(f))
+    except FileNotFoundError:
+        print("config.json introuvable : valeurs par défaut utilisées.")
+    except json.JSONDecodeError as e:
+        print(f"config.json invalide ({e}) : valeurs par défaut utilisées.")
+    return config
+config = load_config()
+SMOOTHING=config["smoothing"]
+MOVE_THUMB_DIST=config["move_thumb_dist"]
+toggle_threshold=config["toggle_threshold"]
+TOGGLE_DELAY=config["toggle_delay"]
+CLICK_DELAY=config["click_delay"]
+
 
 hands =mpHands.Hands(
     static_image_mode=False,

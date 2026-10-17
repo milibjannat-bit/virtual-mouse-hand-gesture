@@ -55,21 +55,22 @@ python main.py
 
 ## Configuration
 
-You can tune the behavior with the constants at the top of `main.py`:
+Most settings live in `config.json`, next to `main.py`. Edit the file and restart the program to apply your changes. If the file is missing or contains a syntax error, the program prints a message and uses the default values. A setting that is absent from the file also keeps its default.
 
-| Constant | Role |
-|---|---|
-| `SMOOTHING` | Higher = steadier cursor but slower to follow your hand |
-| `MOVE_THUMB_DIST` | How close the thumb must be to trigger cursor movement |
-| `MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM` | Part of the camera image ignored on each side (the active zone) |
-| `CLICK_DELAY` | Minimum delay between two clicks, in seconds |
-| `toggle_threshold` | How close the thumb and index fingertips must be to count as a pinch (lower = tighter pinch needed) |
-| `TOGGLE_DELAY` | Minimum delay between two toggles, in seconds (prevents flickering while the pinch is held) |
+| Setting | Role | Default |
+|---|---|---|
+| `smoothing` | Higher = steadier cursor but slower to follow your hand | 5 |
+| `move_thumb_dist` | How close the thumb must be to trigger cursor movement | 70 |
+| `toggle_threshold` | How close the thumb and index fingertips must be to count as a pinch (lower = tighter pinch needed) | 70 |
+| `toggle_delay` | Minimum delay between two toggles, in seconds (prevents flickering while the pinch is held) | 1.5 |
+| `click_delay` | Minimum delay between two clicks, in seconds | 0.5 |
+The active zone margins (`MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM`) are constants defined at the top of `main.py`.
 
 ## Project structure
 
 ```
 main.py             Main program: camera loop, gesture detection, mouse control
+config.json         Settings: thresholds and delays
 util.py             Helper functions (angle and distance between landmarks)
 requirements.txt    Python dependencies
 ```
@@ -87,6 +88,7 @@ Improvements added on top of the tutorial:
 - Active zone with separate top/bottom margins
 - More tolerant cursor-movement detection
 - ON/OFF toggle gesture (sleep mode)
+- Settings file (`config.json`) with default values
 
 ## License
 
