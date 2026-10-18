@@ -64,6 +64,7 @@ Most settings live in `config.json`, next to `main.py`. Edit the file and restar
 | `toggle_threshold` | How close the thumb and index fingertips must be to count as a pinch (lower = tighter pinch needed) | 70 |
 | `toggle_delay` | Minimum delay between two toggles, in seconds (prevents flickering while the pinch is held) | 1.5 |
 | `click_delay` | Minimum delay between two clicks, in seconds | 0.5 |
+
 The active zone margins (`MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM`) are constants defined at the top of `main.py`.
 
 ## Project structure
