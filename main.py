@@ -15,17 +15,21 @@ mouse=Controller()
 last_action_time=0
 control_enabled=False #Etat du contrôle :actif ou en veille
 prev_x, prev_y=None, None 
+scroll_neutral_y = None
 save_dir = Path.home() / "Pictures" / "hand-mouse-screenshots"
 save_dir.mkdir(parents=True, exist_ok=True)
 MARGIN_X = 0.2
 MARGIN_TOP = 0.2
 MARGIN_BOTTOM = 0.35
+SCROLL_ZONE = 0.05
 DEFAULT_CONFIG={
     "smoothing":5,
     "move_thumb_dist":70,
     "toggle_threshold":70,
     "toggle_delay":1.5,
-    "click_delay":0.5
+    "click_delay":0.5,
+    "scroll_thumb_dist":200,
+    "scroll_delay":0.1
 }
 CONFIG_PATH=Path(__file__).parent/"config.json"
 def load_config():
@@ -44,6 +48,8 @@ MOVE_THUMB_DIST=config["move_thumb_dist"]
 toggle_threshold=config["toggle_threshold"]
 TOGGLE_DELAY=config["toggle_delay"]
 CLICK_DELAY=config["click_delay"]
+SCROLL_THUMB_DIST=config["scroll_thumb_dist"]
+SCROLL_DELAY=config["scroll_delay"]
 
 
 hands =mpHands.Hands(
@@ -52,6 +58,7 @@ hands =mpHands.Hands(
     min_detection_confidence=0.7,
     min_tracking_confidence=0.7,
     max_num_hands=1 
+    
 ) 
 def can_act(delay):
     global last_action_time
@@ -66,13 +73,13 @@ def find_finger_tip(processed):
         hand_landmarks=processed.multi_hand_landmarks[0]
         return hand_landmarks.landmark[mpHands.HandLandmark.INDEX_FINGER_TIP]
     return None
+
 def is_toggle_gesture(landmark_list):
     distance=util.get_distance([landmark_list[4],landmark_list[8]])
     if distance is None :
         return False
     middle_extended = util.get_angle(landmark_list[9], landmark_list[10], landmark_list[12]) > 90
     return distance<toggle_threshold and middle_extended
-
         
 def is_left_click(landmarks_list,thumb_index_dist):
     return(util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])<50 and 
@@ -85,11 +92,13 @@ def is_right_click (landmarks_list,thumb_index_dist):
               util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])>90 and
               thumb_index_dist>50
         )
+
 def is_double_click(landmarks_list, thumb_index_dist):
     return(util.get_angle(landmarks_list[9], landmarks_list[10], landmarks_list[12])<50 and 
               util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])<50 and
               thumb_index_dist>50
         )
+
 def screenshot(landmarks_list, thumb_index_dist):
     return(util.get_angle(landmarks_list[9], landmarks_list[10], landmarks_list[12])<50 and 
                   util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8])<50 and
@@ -108,8 +117,20 @@ def move_mouse(index_finger_tip):
         pyautogui.moveTo(int(smooth_x),int(smooth_y))
         prev_x,prev_y=smooth_x,smooth_y
 
+def scroll(current_y):
+    global scroll_neutral_y
+    if scroll_neutral_y is None:
+        scroll_neutral_y = current_y
+        return
+    delta = scroll_neutral_y - current_y
+    if can_act(SCROLL_DELAY):
+        if delta > SCROLL_ZONE:
+            mouse.scroll(0, 1)
+        elif delta < -SCROLL_ZONE:
+            mouse.scroll(0, -1)
+    
 def detected_gestures(frame,landmarks_list,processed):
-    global control_enabled
+    global control_enabled, scroll_neutral_y
     if len(landmarks_list)>=21:
         index_finger_tip=find_finger_tip(processed)
         thumb_index_dist=util.get_distance([landmarks_list[4],landmarks_list[5]])
@@ -117,6 +138,12 @@ def detected_gestures(frame,landmarks_list,processed):
         cv2.putText(frame, f"dist={int(thumb_index_dist)} angle={int(index_angle)}", (50,100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
         toggle_dist = util.get_distance([landmarks_list[4], landmarks_list[8]])
         cv2.putText(frame, f"toggle dist={int(toggle_dist)}", (50,140), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+        scroll_gesture = (thumb_index_dist > SCROLL_THUMB_DIST and
+                  index_angle > 90 and
+                  util.get_angle(landmarks_list[9], landmarks_list[10], landmarks_list[12]) > 90)
+        if not scroll_gesture:
+             scroll_neutral_y = None
+        
         if is_toggle_gesture(landmarks_list):
             if can_act(TOGGLE_DELAY):
                 control_enabled=not control_enabled
@@ -124,6 +151,9 @@ def detected_gestures(frame,landmarks_list,processed):
             if thumb_index_dist < MOVE_THUMB_DIST and util.get_angle(landmarks_list[5], landmarks_list[6], landmarks_list[8]) > 90 and util.get_angle(landmarks_list[9], landmarks_list[10], landmarks_list[12]) > 90:
                 move_mouse(index_finger_tip)
                 cv2.putText(frame,"mouse is moving",(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2)
+            elif scroll_gesture:
+                scroll(landmarks_list[8][1])
+                cv2.putText(frame,"scrolling",(50,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255, 192, 203),2)
             #RICHT CLICK
             elif is_right_click(landmarks_list,thumb_index_dist):
                 if can_act(CLICK_DELAY):
