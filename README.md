@@ -10,6 +10,7 @@ Control your computer's mouse with your hand, using only a webcam. Built with Py
 - Smooth cursor movement (reduces hand-tracking jitter)
 - Active zone: you can reach every edge of the screen without your hand leaving the camera image
 - Toggle the control on and off with a pinch gesture (sleep mode, to avoid accidental actions)
+- Scroll up and down by holding your hand above or below the position where you started the gesture
 
 ## Gestures
 
@@ -21,6 +22,7 @@ Control your computer's mouse with your hand, using only a webcam. Built with Py
 | Double click | Index and middle fingers both bent, thumb away |
 | Screenshot | Index and middle fingers both bent, thumb close |
 | Toggle control ON/OFF | Thumb and index fingertips pinched together, middle finger extended |
+| Scroll | Index and middle fingers extended, thumb wide open. Hold your hand higher than where you started to scroll up, lower to scroll down |
 
 The program **starts in sleep mode** ("Control OFF"): the camera and hand detection run, but no cursor movement or click is sent. Pinch to switch to "Control ON". Pinch again to go back to sleep. The current state is always shown on screen.
 Press `q` in the camera window to quit.
@@ -64,8 +66,10 @@ Most settings live in `config.json`, next to `main.py`. Edit the file and restar
 | `toggle_threshold` | How close the thumb and index fingertips must be to count as a pinch (lower = tighter pinch needed) | 70 |
 | `toggle_delay` | Minimum delay between two toggles, in seconds (prevents flickering while the pinch is held) | 1.5 |
 | `click_delay` | Minimum delay between two clicks, in seconds | 0.5 |
+| `scroll_thumb_dist` | How wide the thumb must be open to trigger scrolling | 200 |
+| `scroll_delay` | Minimum delay between two scroll steps, in seconds (higher = slower scroll) | 0.1 |
 
-The active zone margins (`MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM`) are constants defined at the top of `main.py`.
+The active zone margins (`MARGIN_X`, `MARGIN_TOP`, `MARGIN_BOTTOM`) and the scroll dead zone (`SCROLL_ZONE`) are constants defined at the top of `main.py`.
 
 ## Project structure
 
@@ -90,7 +94,7 @@ Improvements added on top of the tutorial:
 - More tolerant cursor-movement detection
 - ON/OFF toggle gesture (sleep mode)
 - Settings file (`config.json`) with default values
-
+- Scroll gesture (direction given by the hand's height relative to a neutral point)
 ## License
 
 MIT
